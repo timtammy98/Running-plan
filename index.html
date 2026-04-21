@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0907">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Run Plan">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Run Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#0A0907; --bg2:#131109; --bg3:#1B1810; --bg4:#232017;
+  --ink:#EAE4D8; --ink2:#857D6E; --ink3:#4A4438;
+  --gold:#C8B86E; --gold-d:#8A7B48; --gold-bg:rgba(200,184,110,0.08);
+  --brd:rgba(234,228,216,0.07); --brd2:rgba(234,228,216,0.13); --brd3:rgba(234,228,216,0.22);
+  --c-easy:#5BA8D4; --c-easy-a:rgba(91,168,212,0.12);
+  --c-long:#4EB87A; --c-long-a:rgba(78,184,122,0.12);
+  --c-tempo:#DBA842; --c-tempo-a:rgba(219,168,66,0.12);
+  --c-mp:#D97C3A; --c-mp-a:rgba(217,124,58,0.12);
+  --c-int:#D85858; --c-int-a:rgba(216,88,88,0.12);
+  --c-prog:#5DBFA0; --c-prog-a:rgba(93,191,160,0.12);
+  --c-race:#9B7EF0; --c-race-a:rgba(155,126,240,0.12);
+  --c-rest:#5A5248; --c-rest-a:rgba(90,82,72,0.12);
+  --green-tick:#4EB87A;
+  --nav-h:58px; --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;font-size:14px}
+button{font-family:'DM Mono',monospace;cursor:pointer}
+
+/* APP SHELL */
+#app{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.screen.active{display:flex}
+.pb{padding-bottom:calc(var(--nav-h) + var(--safe-b) + 24px)}
+
+/* BOTTOM NAV */
+#nav{flex-shrink:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg2);border-top:0.5px solid var(--brd2);height:calc(var(--nav-h) + var(--safe-b));padding-bottom:var(--safe-b);position:relative;z-index:200}
+.nb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;color:var(--ink3);font-size:9px;letter-spacing:0.09em;text-transform:uppercase;transition:color 0.15s;padding:4px 2px}
+.nb.on{color:var(--gold)}
+.ni{font-size:19px;line-height:1}
+
+/* TYPOGRAPHY */
+.serif{font-family:'Instrument Serif',serif;font-weight:400}
+.eyebrow{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink3)}
+
+/* HERO */
+.hero{background:var(--bg2);padding:calc(var(--safe-t) + 44px) 20px 22px;border-bottom:0.5px solid var(--brd)}
+.hero h1{font-family:'Instrument Serif',serif;font-size:clamp(1.9rem,7vw,2.6rem);line-height:1.06;letter-spacing:-0.015em;margin:10px 0 4px}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero p{font-size:11px;color:var(--ink2);line-height:1.6;margin-top:4px}
+
+/* CARDS */
+.card{background:var(--bg2);border:0.5px solid var(--brd2);border-radius:16px;padding:14px 16px}
+.card+.card{margin-top:10px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+
+/* METRIC MINI */
+.metric{background:var(--bg3);border-radius:12px;padding:12px 14px}
+.metric-label{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink3);margin-bottom:5px}
+.metric-val{font-family:'Instrument Serif',serif;font-size:1.5rem;color:var(--gold);line-height:1}
+.metric-sub{font-size:10px;color:var(--ink2);margin-top:3px}
+
+/* PROGRESS BAR */
+.pbar-wrap{background:var(--bg3);border-radius:100px;height:4px;overflow:hidden;margin:8px 0 5px}
+.pbar-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--gold-d),var(--gold));transition:width 0.7s ease}
+
+/* SECTION LABEL */
+.sl{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink3);padding:16px 20px 8px}
+
+/* PHASE LIST (home) */
+.phase-list{padding:0 16px}
+.phase-row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:0.5px solid var(--brd);cursor:pointer;transition:opacity 0.1s}
+.phase-row:last-child{border-bottom:none}
+.phase-row:active{opacity:0.7}
+.ph-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ph-info{flex:1;min-width:0}
+.ph-name{font-size:13px;color:var(--ink);margin-bottom:2px}
+.ph-meta{font-size:11px;color:var(--ink2)}
+.ph-prog{font-size:11px;color:var(--ink3);white-space:nowrap}
+.ph-arr{font-size:15px;color:var(--ink3);margin-left:6px}
+
+/* ══ PLAN SCREEN ══ */
+.plan-top{background:var(--bg2);border-bottom:0.5px solid var(--brd2);position:sticky;top:0;z-index:100}
+.plan-top-inner{padding:calc(var(--safe-t) + 40px) 20px 12px}
+.plan-top-inner h2{font-family:'Instrument Serif',serif;font-size:1.4rem;margin-bottom:2px}
+.plan-top-inner p{font-size:11px;color:var(--ink2)}
+.pills{display:flex;gap:7px;overflow-x:auto;padding:10px 16px 13px;scrollbar-width:none}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;background:var(--bg3);border:0.5px solid var(--brd2);border-radius:100px;padding:6px 14px;font-size:10px;letter-spacing:0.05em;color:var(--ink2);border:none;white-space:nowrap;transition:all 0.15s}
+.pill.on{background:var(--gold);color:#0A0907;font-weight:500}
+
+.plan-body{padding:12px 14px 0}
+
+/* Phase banner */
+.ph-banner{background:var(--bg2);border:0.5px solid var(--brd2);border-radius:14px;padding:14px 16px;margin-bottom:12px;display:flex;gap:10px}
+.ph-accent{width:3px;border-radius:3px;flex-shrink:0;align-self:stretch}
+.ph-banner-content{flex:1;min-width:0}
+.ph-banner-title{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:4px}
+.ph-banner-desc{font-size:11px;color:var(--ink2);line-height:1.65}
+.ph-banner-stats{display:flex;gap:16px;margin-top:9px}
+.ph-stat-v{font-family:'Instrument Serif',serif;font-size:1.05rem;color:var(--gold)}
+.ph-stat-l{font-size:9px;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink3)}
+
+/* Week cards */
+.wk-card{background:var(--bg2);border:0.5px solid var(--brd);border-radius:14px;overflow:hidden;margin-bottom:9px}
+.wk-head{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;user-select:none;-webkit-user-select:none}
+.wk-head:active{background:rgba(234,228,216,0.03)}
+.wk-num{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink3);min-width:40px;flex-shrink:0}
+.wk-title{font-family:'Instrument Serif',serif;font-size:0.95rem;flex:1;color:var(--ink)}
+.wk-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.wk-km{font-size:10px;color:var(--ink3)}
+.wk-prog{font-size:10px;color:var(--ink2)}
+.wk-chev{font-size:10px;color:var(--ink3);transition:transform 0.2s}
+.wk-card.open .wk-chev{transform:rotate(180deg)}
+.wk-body{display:none;border-top:0.5px solid var(--brd)}
+.wk-card.open .wk-body{display:block}
+
+/* Run rows */
+.run-row{display:grid;grid-template-columns:68px 1fr;border-bottom:0.5px solid var(--brd);position:relative;transition:opacity 0.2s}
+.run-row:last-child{border-bottom:none}
+.run-row.done{opacity:0.45}
+.run-type-col{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;text-align:center;gap:4px}
+.run-type-label{font-size:8px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;line-height:1.3}
+.run-detail-col{padding:12px 14px;border-left:0.5px solid var(--brd)}
+.run-title{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:7px;line-height:1.4}
+.detail-line{display:flex;align-items:baseline;gap:6px;font-size:11px;margin-bottom:3px;flex-wrap:wrap}
+.dl{font-size:9px;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink3);min-width:56px;flex-shrink:0}
+.dv{color:var(--ink);line-height:1.4}
+.ds{color:var(--ink2);font-size:10px}
+.run-note{margin-top:7px;padding-top:7px;border-top:0.5px solid var(--brd);font-size:10px;color:var(--ink2);line-height:1.75}
+
+/* TICK BUTTON */
+.tick-btn{margin-top:10px;display:flex;align-items:center;gap:8px;background:var(--bg3);border:0.5px solid var(--brd2);border-radius:100px;padding:7px 14px;font-size:11px;color:var(--ink2);width:100%;justify-content:center;transition:all 0.15s}
+.tick-btn:active{transform:scale(0.97)}
+.tick-btn.ticked{background:rgba(78,184,122,0.12);border-color:rgba(78,184,122,0.3);color:var(--green-tick)}
+.tick-icon{font-size:14px;line-height:1}
+
+/* Type colours */
+.rt-easy .run-type-col{background:var(--c-easy-a)} .rt-easy .run-type-label{color:var(--c-easy)}
+.rt-long .run-type-col{background:var(--c-long-a)} .rt-long .run-type-label{color:var(--c-long)}
+.rt-tempo .run-type-col{background:var(--c-tempo-a)} .rt-tempo .run-type-label{color:var(--c-tempo)}
+.rt-mp .run-type-col{background:var(--c-mp-a)} .rt-mp .run-type-label{color:var(--c-mp)}
+.rt-interval .run-type-col{background:var(--c-int-a)} .rt-interval .run-type-label{color:var(--c-int)}
+.rt-prog .run-type-col{background:var(--c-prog-a)} .rt-prog .run-type-label{color:var(--c-prog)}
+.rt-race .run-type-col{background:var(--c-race-a)} .rt-race .run-type-label{color:var(--c-race)}
+.rt-rest .run-type-col{background:var(--c-rest-a)} .rt-rest .run-type-label{color:var(--c-rest)}
+
+/* ══ SCHEDULE SCREEN ══ */
+.sched-hero{background:var(--bg2);padding:calc(var(--safe-t) + 44px) 20px 20px;border-bottom:0.5px solid var(--brd)}
+.sched-hero h2{font-family:'Instrument Serif',serif;font-size:1.6rem;line-height:1.1;margin-bottom:4px}
+.sched-hero p{font-size:11px;color:var(--ink2);line-height:1.6}
+.sched-body{padding:14px 14px 0}
+
+/* Traffic light pairs */
+.rule-card{background:var(--bg2);border:0.5px solid var(--brd2);border-radius:14px;overflow:hidden;margin-bottom:10px}
+.rule-head{padding:13px 16px;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid var(--brd)}
+.rule-head-icon{font-size:18px;line-height:1;flex-shrink:0;width:24px;text-align:center}
+.rule-head-title{font-size:13px;font-weight:500;color:var(--ink);flex:1}
+.rule-head-badge{font-size:9px;font-weight:500;padding:3px 9px;border-radius:100px;letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0}
+.badge-never{background:rgba(216,88,88,0.15);color:#D85858}
+.badge-caution{background:rgba(219,168,66,0.15);color:#DBA842}
+.badge-fine{background:rgba(78,184,122,0.15);color:#4EB87A}
+.rule-body{padding:12px 16px;display:flex;flex-direction:column;gap:7px}
+.rule-line{display:flex;align-items:flex-start;gap:9px;font-size:11px;color:var(--ink2);line-height:1.6}
+.rule-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.rule-line strong{color:var(--ink);font-weight:500}
+
+/* Activity legend */
+.act-legend{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px;background:var(--bg2);border:0.5px solid var(--brd2);border-radius:14px;margin-bottom:12px}
+.act-tag{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink2)}
+.act-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* OPTIMAL WEEK */
+.week-seq{display:flex;flex-direction:column;gap:6px}
+.seq-row{display:grid;grid-template-columns:58px 1fr;gap:10px;align-items:center}
+.seq-day{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3)}
+.seq-acts{display:flex;gap:6px;flex-wrap:wrap}
+.seq-act{font-size:11px;padding:4px 10px;border-radius:100px;border:0.5px solid var(--brd2);color:var(--ink2)}
+.seq-act.run-act{background:var(--c-easy-a);color:var(--c-easy);border-color:rgba(91,168,212,0.2)}
+.seq-act.long-act{background:var(--c-long-a);color:var(--c-long);border-color:rgba(78,184,122,0.2)}
+.seq-act.quality-act{background:var(--c-int-a);color:var(--c-int);border-color:rgba(216,88,88,0.2)}
+.seq-act.pilates-act{background:rgba(155,126,240,0.1);color:#9B7EF0;border-color:rgba(155,126,240,0.2)}
+.seq-act.boulder-act{background:rgba(219,168,66,0.1);color:#DBA842;border-color:rgba(219,168,66,0.2)}
+.seq-act.spin-act{background:rgba(93,191,160,0.1);color:#5DBFA0;border-color:rgba(93,191,160,0.2)}
+.seq-act.rest-act{background:var(--bg3);color:var(--ink3)}
+
+/* ZONES SCREEN */
+.zones-hero{background:var(--bg2);padding:calc(var(--safe-t) + 44px) 20px 20px;border-bottom:0.5px solid var(--brd)}
+.zones-hero h2{font-family:'Instrument Serif',serif;font-size:1.6rem;line-height:1.1;margin-bottom:4px}
+.zones-hero p{font-size:11px;color:var(--ink2)}
+.zones-body{padding:14px 14px 0}
+.zone-card{background:var(--bg2);border:0.5px solid var(--brd2);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px}
+.zone-num{font-family:'Instrument Serif',serif;font-style:italic;font-size:2.2rem;color:var(--ink3);line-height:1;min-width:28px}
+.zone-name{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.zone-hr{font-size:12px;color:var(--gold);margin-bottom:5px}
+.zone-desc{font-size:11px;color:var(--ink2);line-height:1.65}
+.zone-use{font-size:9px;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink3);margin-top:5px}
+.ref-card{background:var(--bg2);border:0.5px solid var(--brd2);border-radius:14px;padding:13px 16px;margin-bottom:10px}
+.ref-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;padding:3px 0;border-bottom:0.5px solid var(--brd)}
+.ref-row:last-child{border-bottom:none}
+.ref-l{color:var(--ink2)}
+.ref-v{color:var(--ink);font-weight:500}
+.rules-list{background:var(--bg2);border:0.5px solid var(--brd2);border-radius:14px;padding:13px 16px;margin-bottom:10px}
+.rule-item{font-size:11px;color:var(--ink2);line-height:1.9;display:flex;gap:8px;align-items:flex-start}
+.rule-arr{color:var(--ink3);flex-shrink:0;margin-top:1px}
+
+/* RESET button */
+.reset-btn{background:none;border:0.5px solid var(--brd2);border-radius:100px;padding:8px 18px;font-size:11px;color:var(--ink3);display:block;margin:16px auto 0}
+.reset-btn:active{color:var(--c-int)}
+
+/* TOAST */
+#toast{position:fixed;bottom:calc(var(--nav-h) + var(--safe-b) + 16px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:0.5px solid var(--brd3);border-radius:100px;padding:9px 18px;font-size:12px;color:var(--ink);pointer-events:none;opacity:0;transition:all 0.25s;white-space:nowrap;z-index:500}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══════════ HOME ══════════ -->
+<div class="screen active pb" id="s-home">
+  <div class="hero">
+    <div class="eyebrow">Apr 21 – Oct 11, 2026</div>
+    <h1>Road to <em>sub-60</em><br>& <em>sub-2h</em></h1>
+    <p>25 weeks · 3 runs/week · Built from 3 plans · Melbourne</p>
+  </div>
+
+  <div style="padding:16px 16px 0">
+    <div class="g2">
+      <div class="metric">
+        <div class="metric-label">10K goal</div>
+        <div class="metric-val">Sub 60</div>
+        <div class="metric-sub">Jul 13, 2026</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Half marathon</div>
+        <div class="metric-val">Sub 2h</div>
+        <div class="metric-sub">Oct 11, 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:14px 16px 0">
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px">Plan progress</div>
+      <div class="pbar-wrap"><div class="pbar-fill" id="home-prog-fill" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink3)">
+        <span id="home-prog-label">Week 1 of 25</span>
+        <span id="home-prog-pct">0%</span>
+      </div>
+      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:var(--ink2)" id="home-runs-done">0 runs ticked off</span>
+        <button class="reset-btn" style="margin:0" onclick="confirmReset()">Reset all</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:14px 16px 0">
+    <div class="g2">
+      <div class="metric"><div class="metric-label">Current Z2</div><div class="metric-val" style="font-size:1.1rem">7:00–7:30</div><div class="metric-sub">/km · 142–155 bpm</div></div>
+      <div class="metric"><div class="metric-label">HM goal pace</div><div class="metric-val" style="font-size:1.1rem">5:41</div><div class="metric-sub">/km · sub-2:00</div></div>
+    </div>
+  </div>
+
+  <div class="sl">Phases</div>
+  <div class="phase-list" id="home-phase-list"></div>
+  <div style="height:8px"></div>
+</div>
+
+<!-- ══════════ PLAN ══════════ -->
+<div class="screen" id="s-plan">
+  <div class="plan-top">
+    <div class="plan-top-inner">
+      <h2>Training Plan</h2>
+      <p>Tap phase · expand week · tick runs as done</p>
+    </div>
+    <div class="pills" id="phase-pills"></div>
+  </div>
+  <div class="plan-body pb" id="plan-body"></div>
+</div>
+
+<!-- ══════════ SCHEDULE ══════════ -->
+<div class="screen pb" id="s-sched">
+  <div class="sched-hero">
+    <h2>Scheduling<br>Guide</h2>
+    <p>What to do back-to-back — and what to never stack</p>
+  </div>
+  <div class="sched-body">
+
+    <div class="sl" style="padding-left:0;padding-top:4px">Activity key</div>
+    <div class="act-legend">
+      <div class="act-tag"><div class="act-dot" style="background:var(--c-easy)"></div>Easy run</div>
+      <div class="act-tag"><div class="act-dot" style="background:var(--c-long)"></div>Long run</div>
+      <div class="act-tag"><div class="act-dot" style="background:var(--c-int)"></div>Quality run</div>
+      <div class="act-tag"><div class="act-dot" style="background:#9B7EF0"></div>Pilates</div>
+      <div class="act-tag"><div class="act-dot" style="background:var(--c-tempo)"></div>Bouldering</div>
+      <div class="act-tag"><div class="act-dot" style="background:var(--c-prog)"></div>Spin</div>
+    </div>
+
+    <div class="sl" style="padding-left:0">Never stack these</div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">🚫</div>
+        <div class="rule-head-title">Hard spin → any run</div>
+        <div class="rule-head-badge badge-never">Never</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-int)"></div><span>High intensity spin the day before a tempo, interval, or long run wipes out both sessions. Your legs won't have recovered and your quality run suffers.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-int)"></div><span><strong>The fix:</strong> if you spin, treat it as a replacement for an easy run that week — not an addition. Keep resistance low and call it active recovery.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">🚫</div>
+        <div class="rule-head-title">Long run → any hard session</div>
+        <div class="rule-head-badge badge-never">Never</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-long)"></div><span>The day after a long run must be full rest or very light movement. The long run creates structural micro-damage that takes 36–48 hrs to repair.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-long)"></div><span><strong>This includes:</strong> intervals, tempo, hard spin, heavy bouldering. Even an "easy" run the day after a long run should only happen if you genuinely feel recovered.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">🚫</div>
+        <div class="rule-head-title">Quality run → quality run</div>
+        <div class="rule-head-badge badge-never">Never</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-int)"></div><span>Two hard running sessions on consecutive days leads to compounding fatigue and dramatically increases injury risk. Always separate interval and tempo sessions by at least 48 hrs.</span></div>
+      </div>
+    </div>
+
+    <div class="sl" style="padding-left:0">Approach with caution</div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">⚠️</div>
+        <div class="rule-head-title">Bouldering → quality run (same day)</div>
+        <div class="rule-head-badge badge-caution">Caution</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-tempo)"></div><span>Bouldering is upper-body dominant so your legs stay fresh — but systemic fatigue is real. If you boulder in the morning, an interval session that evening will be harder than normal.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-tempo)"></div><span><strong>Best practice:</strong> boulder the day before an easy run, not before a quality run. Or boulder after your quality run if the day has to be combined.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">⚠️</div>
+        <div class="rule-head-title">Heavy bouldering → long run</div>
+        <div class="rule-head-badge badge-caution">Caution</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-tempo)"></div><span>An intense bouldering session (max problems, 2+ hrs) causes real systemic fatigue. If your long run falls the next day and you feel heavy, cut 2–3 km and keep it very easy.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-tempo)"></div><span><strong>Light bouldering</strong> the day before a long run is generally fine — grip training doesn't tax the legs.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">⚠️</div>
+        <div class="rule-head-title">Low-intensity spin → run (next day)</div>
+        <div class="rule-head-badge badge-caution">Caution</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-prog)"></div><span>Low-resistance spin as active recovery (HR &lt;150) the day before an easy run is fine. The day before a tempo or interval session — even at low intensity — takes the edge off your legs.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-prog)"></div><span><strong>Rule of thumb:</strong> spin sits between bouldering and easy running in its impact. Treat it like an easy run when scheduling around quality sessions.</span></div>
+      </div>
+    </div>
+
+    <div class="sl" style="padding-left:0">Generally fine</div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">✅</div>
+        <div class="rule-head-title">Pilates → any run (next day)</div>
+        <div class="rule-head-badge badge-fine">Fine</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:#9B7EF0"></div><span>Reformer pilates is low-impact and actually <strong>helps</strong> your running. It activates glutes and deep core — muscles that running doesn't train well in isolation. You can do pilates the day before almost any run.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:#9B7EF0"></div><span><strong>Best placement:</strong> pilates the day before an easy run is ideal — the neuromuscular activation carries over positively.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">✅</div>
+        <div class="rule-head-title">Easy run → bouldering (next day)</div>
+        <div class="rule-head-badge badge-fine">Fine</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-easy)"></div><span>An easy Z2 run followed by bouldering the next day is a good combination. Your legs are fresh and bouldering doesn't stress the running muscles.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">✅</div>
+        <div class="rule-head-title">Bouldering → quality run (next day)</div>
+        <div class="rule-head-badge badge-fine">Fine</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-tempo)"></div><span>Bouldering one day then an interval or tempo run the next is a workable sequence. Your running legs had a rest while bouldering. This is the preferred order if both fall in the same 2-day window.</span></div>
+      </div>
+    </div>
+
+    <div class="sl" style="padding-left:0">Optimal week template</div>
+    <div class="card" style="margin-bottom:10px">
+      <p style="font-size:11px;color:var(--ink2);margin-bottom:12px;line-height:1.6">Shift work means your actual days rotate — but try to keep this <em>sequence</em> wherever possible.</p>
+      <div class="week-seq">
+        <div class="seq-row"><div class="seq-day">Day 1</div><div class="seq-acts"><span class="seq-act long-act">Long run</span></div></div>
+        <div class="seq-row"><div class="seq-day">Day 2</div><div class="seq-acts"><span class="seq-act rest-act">Full rest</span></div></div>
+        <div class="seq-row"><div class="seq-day">Day 3</div><div class="seq-acts"><span class="seq-act pilates-act">Pilates</span></div></div>
+        <div class="seq-row"><div class="seq-day">Day 4</div><div class="seq-acts"><span class="seq-act run-act">Easy run</span></div></div>
+        <div class="seq-row"><div class="seq-day">Day 5</div><div class="seq-acts"><span class="seq-act boulder-act">Bouldering</span></div></div>
+        <div class="seq-row"><div class="seq-day">Day 6</div><div class="seq-acts"><span class="seq-act quality-act">Quality run</span></div></div>
+        <div class="seq-row"><div class="seq-day">Day 7</div><div class="seq-acts"><span class="seq-act spin-act">Spin (optional)</span><span class="seq-act rest-act">or rest</span></div></div>
+      </div>
+      <p style="font-size:10px;color:var(--ink3);margin-top:12px;line-height:1.6">If spin falls on day 7, keep it low resistance — treat it as a flush, not a workout.</p>
+    </div>
+
+    <div class="sl" style="padding-left:0">Same-day combinations</div>
+    <p style="font-size:11px;color:var(--ink2);line-height:1.7;margin-bottom:12px">When two activities fall on the same day, order and intensity matter. Always do the higher-priority activity first when fresh.</p>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">🚫</div>
+        <div class="rule-head-title">Quality run + hard spin (same day)</div>
+        <div class="rule-head-badge badge-never">Never</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-int)"></div><span>A tempo or interval session combined with hard spin in the same day is too much leg stress. One of the sessions will be junk — and the combined fatigue raises injury risk significantly.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-int)"></div><span><strong>No exceptions.</strong> If the day only allows one, choose the run. Spin can be moved or skipped.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">🚫</div>
+        <div class="rule-head-title">Long run + any hard session (same day)</div>
+        <div class="rule-head-badge badge-never">Never</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-long)"></div><span>A long run is already a full training stimulus. Pairing it with intervals, hard spin, or a heavy boulder session in the same day is excessive loading that undermines recovery and adaptation.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-long)"></div><span><strong>Light pilates after a long run</strong> is the only exception — and only if the run felt good and the pilates is genuinely gentle stretching and activation.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">⚠️</div>
+        <div class="rule-head-title">Quality run + bouldering (same day)</div>
+        <div class="rule-head-badge badge-caution">Caution</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-int)"></div><span><strong>Order matters:</strong> run first, boulder second — always. Bouldering after a tempo or interval session is manageable because bouldering is upper-body dominant and your legs are already spent.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-int)"></div><span><strong>Never reverse this.</strong> Bouldering first then a quality run means your grip, core, and shoulders are fatigued — and systemic fatigue will blunt your interval performance.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-int)"></div><span>Keep at least 3–4 hours between the two. Keep the bouldering session lighter than normal on these days.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">⚠️</div>
+        <div class="rule-head-title">Easy run + hard spin (same day)</div>
+        <div class="rule-head-badge badge-caution">Caution</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-easy)"></div><span>An easy run and hard spin in the same day is technically possible but edges into overloading your aerobic system. The combined cardiovascular demand is significant even if neither session feels like an all-out effort.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-easy)"></div><span><strong>If you do this:</strong> run first, spin second — and treat the spin as moderate rather than high intensity. Ensure the following day is full rest or very light movement.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">⚠️</div>
+        <div class="rule-head-title">Easy run + bouldering (same day)</div>
+        <div class="rule-head-badge badge-caution">Caution</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-easy)"></div><span>Doable on lower-volume weeks. <strong>Run first, boulder second</strong> — the run is the training priority. Bouldering after an easy Z2 run is fine because your legs aren't taxed and bouldering uses different muscle groups.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-easy)"></div><span><strong>Avoid this combo</strong> the day before a quality run or long run — the combined fatigue will carry over and blunt the more important session.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">✅</div>
+        <div class="rule-head-title">Any run + pilates (same day)</div>
+        <div class="rule-head-badge badge-fine">Fine</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:#9B7EF0"></div><span>Pilates and running are highly complementary. Pilates activates glutes, hip flexors, and deep core — all of which support better running mechanics. Combining them on the same day is not only fine but beneficial.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:#9B7EF0"></div><span><strong>Best order for quality or long runs:</strong> run first, pilates after — you want to be fully fresh for the run. For easy runs, either order works.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:#9B7EF0"></div><span><strong>One exception:</strong> avoid intense pilates (heavy reformer work) immediately before an interval session — some leg and hip fatigue from pilates can blunt your rep quality.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">✅</div>
+        <div class="rule-head-title">Easy run + low-intensity spin (same day)</div>
+        <div class="rule-head-badge badge-fine">Fine</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-prog)"></div><span>An easy run followed by a light recovery spin (HR &lt;145, low resistance) is a solid active recovery day combination. The spin flushes the legs without adding meaningful fatigue.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:var(--c-prog)"></div><span><strong>Don't let the spin creep up in intensity.</strong> Once you're sweating hard on the bike, you've crossed from recovery into training — and that changes the calculation entirely.</span></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-head">
+        <div class="rule-head-icon">✅</div>
+        <div class="rule-head-title">Pilates + bouldering (same day)</div>
+        <div class="rule-head-badge badge-fine">Fine</div>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><div class="rule-dot" style="background:#9B7EF0"></div><span>Two non-running activities on a rest day from running is completely fine. Neither heavily taxes the cardiovascular system or the running-specific muscles.</span></div>
+        <div class="rule-line"><div class="rule-dot" style="background:#9B7EF0"></div><span><strong>Good combination on a rest day</strong> — pilates in the morning activates the core and hips, which carries over positively to bouldering technique in the afternoon.</span></div>
+      </div>
+    </div>
+
+    <div class="sl" style="padding-left:0">Same-day quick reference</div>
+    <div class="card" style="margin-bottom:10px;overflow:hidden;padding:0">
+      <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);background:var(--bg3)">
+        <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3)">Combination</span>
+        <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3)">Same day?</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
+        <span style="font-size:12px;color:var(--ink2)">Quality run + hard spin</span>
+        <span style="font-size:11px;font-weight:500;color:#D85858">Never</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
+        <span style="font-size:12px;color:var(--ink2)">Long run + hard session</span>
+        <span style="font-size:11px;font-weight:500;color:#D85858">Never</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
+        <span style="font-size:12px;color:var(--ink2)">Quality run + bouldering</span>
+        <span style="font-size:11px;font-weight:500;color:#DBA842">Run first</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
+        <span style="font-size:12px;color:var(--ink2)">Easy run + hard spin</span>
+        <span style="font-size:11px;font-weight:500;color:#DBA842">Run first</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
+        <span style="font-size:12px;color:var(--ink2)">Easy run + bouldering</span>
+        <span style="font-size:11px;font-weight:500;color:#DBA842">Run first</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
+        <span style="font-size:12px;color:var(--ink2)">Any run + pilates</span>
+        <span style="font-size:11px;font-weight:500;color:#4EB87A">Fine</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
+        <span style="font-size:12px;color:var(--ink2)">Easy run + light spin</span>
+        <span style="font-size:11px;font-weight:500;color:#4EB87A">Fine</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;align-items:center">
+        <span style="font-size:12px;color:var(--ink2)">Pilates + bouldering</span>
+        <span style="font-size:11px;font-weight:500;color:#4EB87A">Fine</span>
+      </div>
+    </div>
+
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- ══════════ ZONES ══════════ -->
+<div class="screen pb" id="s-zones">
+  <div class="zones-hero">
+    <h2>Zones &<br>Reference</h2>
+    <p>Max HR 206 bpm · Z2 currently 7:00–7:30/km</p>
+  </div>
+  <div class="zones-body">
+    <div class="zone-card"><div class="zone-num">2</div><div><div class="zone-name">Zone 2 — aerobic base</div><div class="zone-hr">142–155 bpm</div><div class="zone-desc">Conversational. Could sing. Feels almost too easy — it should. HR overrides pace: if HR drifts above 155, slow down or walk regardless of what pace looks like.</div><div class="zone-use">All easy runs · long runs · warm-ups · cool-downs</div></div></div>
+    <div class="zone-card"><div class="zone-num">3</div><div><div class="zone-name">Zone 3 — marathon pace</div><div class="zone-hr">158–168 bpm</div><div class="zone-desc">HM race pace effort. Sentences possible but laboured. Controlled, not maximal. This is where you'll spend most of October 11.</div><div class="zone-use">MP runs · HM race km 6–15 · progression long run finish</div></div></div>
+    <div class="zone-card"><div class="zone-num">4</div><div><div class="zone-name">Zone 4 — tempo / threshold</div><div class="zone-hr">163–172 bpm</div><div class="zone-desc">Comfortably hard. 2–3 words only. Use HR as guide on tempo runs — let pace follow. Builds the engine that makes race pace feel controlled.</div><div class="zone-use">Tempo runs · threshold work</div></div></div>
+    <div class="zone-card"><div class="zone-num">5</div><div><div class="zone-name">Zone 5 — VO₂ max</div><div class="zone-hr">173–190 bpm</div><div class="zone-desc">Very hard. Speaking impossible. Use pace as guide on intervals, not HR — HR lags on short reps. Use ~182 bpm as a ceiling, not a target.</div><div class="zone-use">Interval reps · race finish km 9–10 &amp; 18–21</div></div></div>
+
+    <div class="sl" style="padding-left:0">Race pace targets</div>
+    <div class="ref-card">
+      <div class="ref-row"><span class="ref-l">10K goal</span><span class="ref-v">Sub 60 min</span></div>
+      <div class="ref-row"><span class="ref-l">Avg pace needed</span><span class="ref-v">5:58 /km</span></div>
+      <div class="ref-row"><span class="ref-l">Start pace (km 1–3)</span><span class="ref-v">6:05–6:10 /km</span></div>
+      <div class="ref-row"><span class="ref-l">Race HR km 4–8</span><span class="ref-v">172–178 bpm</span></div>
+      <div class="ref-row"><span class="ref-l">Race date</span><span class="ref-v">Jul 13, 2026</span></div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-row"><span class="ref-l">HM goal</span><span class="ref-v">Sub 2:00</span></div>
+      <div class="ref-row"><span class="ref-l">Avg pace needed</span><span class="ref-v">5:41 /km</span></div>
+      <div class="ref-row"><span class="ref-l">Start pace (km 1–5)</span><span class="ref-v">5:48–5:55 /km</span></div>
+      <div class="ref-row"><span class="ref-l">Race HR km 6–15</span><span class="ref-v">162–170 bpm</span></div>
+      <div class="ref-row"><span class="ref-l">Race date</span><span class="ref-v">Oct 11, 2026</span></div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-row"><span class="ref-l">Z2 pace now</span><span class="ref-v">7:00–7:30 /km</span></div>
+      <div class="ref-row"><span class="ref-l">Z2 target by Jul 13</span><span class="ref-v">6:45–7:05 /km</span></div>
+      <div class="ref-row"><span class="ref-l">Z2 target by Oct 11</span><span class="ref-v">6:25–6:50 /km</span></div>
+      <div class="ref-row"><span class="ref-l">Tempo now</span><span class="ref-v">6:15–6:30 /km</span></div>
+      <div class="ref-row"><span class="ref-l">Tempo by Jul 13</span><span class="ref-v">5:58–6:12 /km</span></div>
+      <div class="ref-row"><span class="ref-l">Tempo by Oct 11</span><span class="ref-v">5:45–6:00 /km</span></div>
+    </div>
+
+    <div class="sl" style="padding-left:0">Non-negotiable rules</div>
+    <div class="rules-list">
+      <div class="rule-item"><span class="rule-arr">→</span><span>HR overrides pace on all easy and long runs</span></div>
+      <div class="rule-item"><span class="rule-arr">→</span><span>Always rest the day after a long run</span></div>
+      <div class="rule-item"><span class="rule-arr">→</span><span>Never hard spin before a tempo or long run</span></div>
+      <div class="rule-item"><span class="rule-arr">→</span><span>Every 4th week is a deload — never skip it</span></div>
+      <div class="rule-item"><span class="rule-arr">→</span><span>Fuel every 40–45 min on runs over 12 km</span></div>
+      <div class="rule-item"><span class="rule-arr">→</span><span>Use pace as guide on intervals, HR as ceiling</span></div>
+      <div class="rule-item"><span class="rule-arr">→</span><span>Z2 pace is your progress indicator — check monthly</span></div>
+      <div class="rule-item"><span class="rule-arr">→</span><span>Pilates can go almost any day — low impact</span></div>
+      <div class="rule-item"><span class="rule-arr">→</span><span>Deload weeks: reduce volume ~25%, keep one quality session</span></div>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<nav id="nav">
+  <button class="nb on" onclick="nav('home',this)"><span class="ni">⌂</span><span>Home</span></button>
+  <button class="nb" onclick="nav('plan',this)"><span class="ni">◈</span><span>Plan</span></button>
+  <button class="nb" onclick="nav('sched',this)"><span class="ni">⇄</span><span>Schedule</span></button>
+  <button class="nb" onclick="nav('zones',this)"><span class="ni">♡</span><span>Zones</span></button>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════ PLAN DATA ═══════════════════
+const PHASES=[
+{id:'p1',name:'Threshold',label:'① Threshold intro',color:'#5BA8D4',weeks:'Wk 1–4',dur:'4 wks',km:'38–44 km/wk',
+desc:'10-week aerobic base is done. Z2 is 7:00–7:30/km. First tempo sessions now — HR-guided. Long run to 18 km. No intervals yet.',
+data:[
+{n:1,sub:'First tempo',km:38,open:1,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 9 km + 5 strides',bl:[{l:'Warm-up',v:'5 min walk'},{l:'Distance',v:'9 km'},{l:'Pace',v:'7:00–7:30 /km'},{l:'HR',v:'142–155 bpm'},{l:'Strides',v:'5 × 20 sec fast',s:'90 sec walk recovery after each'}],note:'Strides bridge base and quality work. Keep them relaxed and flowing, not a sprint.'},
+{t:'tempo',tl:'Tempo',title:'First tempo run — ~9 km total',bl:[{l:'Warm-up',v:'10 min easy jog',s:'~7:30/km · HR <150'},{l:'Tempo',v:'20 min at 6:15–6:30 /km'},{l:'HR target',v:'163–172 bpm',s:'comfortably hard — 2–3 words max'},{l:'Cool-down',v:'10 min easy jog + 5 min walk'}],note:'First real tempo. HR is the guide — if 6:15/km pushes you above 172, back off to 6:30. Pace drops over weeks as you adapt.'},
+{t:'long',tl:'Long',title:'Long run — 16 km',bl:[{l:'Warm-up',v:'5 min walk'},{l:'Distance',v:'16 km · Z2 throughout'},{l:'Pace',v:'7:00–7:30 /km'},{l:'HR',v:'142–152 bpm'}],note:'Keep entirely easy. The tempo run is the hard session this week.'}
+]},
+{n:2,sub:'Extend tempo',km:41,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 9 km + 5 strides',bl:[{l:'Distance',v:'9 km'},{l:'Pace',v:'7:00–7:25 /km'},{l:'HR',v:'142–155 bpm'},{l:'Strides',v:'5 × 20 sec'}],note:null},
+{t:'tempo',tl:'Tempo',title:'Tempo run — ~9.5 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Tempo',v:'25 min at 6:10–6:25 /km'},{l:'HR target',v:'163–172 bpm'},{l:'Cool-down',v:'10 min easy + 5 min walk'}],note:'5 extra minutes vs last week. Start at the slower end — don\'t go out at 6:10 and blow up.'},
+{t:'long',tl:'Long',title:'Long run — 17 km',bl:[{l:'Distance',v:'17 km · Z2'},{l:'Pace',v:'7:00–7:25 /km'},{l:'HR',v:'142–152 bpm'}],note:null}
+]},
+{n:3,sub:'Split tempo',km:43,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 9 km + 5 strides',bl:[{l:'Distance',v:'9 km'},{l:'Pace',v:'6:55–7:20 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'tempo',tl:'Tempo',title:'Split tempo — ~10 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Tempo',v:'2 × 15 min at 6:10–6:20 /km'},{l:'Recovery',v:'3 min easy jog between'},{l:'HR target',v:'163–172 bpm'},{l:'Cool-down',v:'10 min easy + 5 min walk'}],note:'Two segments with 3 min recovery. The second segment always feels harder — that\'s the point.'},
+{t:'long',tl:'Long',title:'Long run — 18 km',bl:[{l:'Distance',v:'18 km · Z2'},{l:'Pace',v:'7:00–7:20 /km'},{l:'HR',v:'142–152 bpm'}],note:'First time at 18 km. Fuel at 9 km. Keep HR honest in the final 4 km.'}
+]},
+{n:4,sub:'Deload',km:30,runs:[
+{t:'rest',tl:'Easy',title:'Easy run — 7 km',bl:[{l:'Distance',v:'7 km'},{l:'Pace',v:'7:05–7:30 /km'},{l:'HR',v:'142–152 bpm'}],note:'Deload week. Volume drops ~25%. Adaptation happens during rest.'},
+{t:'tempo',tl:'Tempo',title:'Reduced tempo — ~7.5 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Tempo',v:'20 min at 6:15–6:25 /km'},{l:'HR target',v:'163–170 bpm'},{l:'Cool-down',v:'10 min easy + walk'}],note:'Shorter duration, same intensity.'},
+{t:'long',tl:'Long',title:'Step-back long run — 13 km',bl:[{l:'Distance',v:'13 km · Z2'},{l:'Pace',v:'7:00–7:25 /km'},{l:'HR',v:'142–150 bpm'}],note:'Shorter long run is deliberate. Enjoy it.'}
+]}
+]},
+{id:'p2',name:'Speed',label:'② Speed intro',color:'#4EB87A',weeks:'Wk 5–8',dur:'4 wks',km:'42–47 km/wk',
+desc:'Intervals begin. 10 weeks of strides have primed your neuromuscular system. Start at 5:50–6:00/km — faster than race pace makes 6:00/km feel controlled on race day.',
+data:[
+{n:5,sub:'First intervals',km:42,open:1,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 9 km + 5 strides',bl:[{l:'Distance',v:'9 km'},{l:'Pace',v:'6:55–7:20 /km'},{l:'HR',v:'142–155 bpm'}],note:'Keep easy. Legs need to be fresh for intervals.'},
+{t:'interval',tl:'Intervals',title:'5 × 1 km intervals — ~10 km total',bl:[{l:'Warm-up',v:'15 min easy jog',s:'7:15/km · HR <150 · loosen up properly'},{l:'Intervals',v:'5 × 1 km at 5:50–6:00 /km'},{l:'HR during rep',v:'170–180 bpm',s:'use pace as guide, HR as ceiling ~182'},{l:'Recovery',v:'90 sec easy jog between reps',s:'~8:00/km · let HR drop to ~155'},{l:'Cool-down',v:'10 min easy + 5 min walk'}],note:'First interval session. If rep 5 falls apart, stop at 4. Quality over completion.'},
+{t:'long',tl:'Long',title:'Long run — 17 km',bl:[{l:'Distance',v:'17 km · Z2'},{l:'Pace',v:'6:55–7:20 /km'},{l:'HR',v:'142–152 bpm'}],note:null}
+]},
+{n:6,sub:'Build intervals',km:44,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 9 km + 5 strides',bl:[{l:'Distance',v:'9 km'},{l:'Pace',v:'6:50–7:15 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'interval',tl:'Intervals',title:'6 × 800m intervals — ~10 km total',bl:[{l:'Warm-up',v:'15 min easy jog'},{l:'Intervals',v:'6 × 800m at 5:45–5:55 /km'},{l:'HR during rep',v:'170–180 bpm'},{l:'Recovery',v:'90 sec easy jog'},{l:'Cool-down',v:'10 min easy + 5 min walk'}],note:'Shorter reps, more of them. Pace should feel more controlled than week 5.'},
+{t:'long',tl:'Long',title:'Long run — 18 km',bl:[{l:'Distance',v:'18 km · Z2'},{l:'Pace',v:'6:50–7:15 /km'},{l:'HR',v:'142–152 bpm'}],note:null}
+]},
+{n:7,sub:'Longer reps',km:46,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 10 km + 5 strides',bl:[{l:'Distance',v:'10 km'},{l:'Pace',v:'6:50–7:10 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'interval',tl:'Intervals',title:'4 × 1.2 km intervals — ~10.5 km total',bl:[{l:'Warm-up',v:'15 min easy jog'},{l:'Intervals',v:'4 × 1.2 km at 5:45–5:55 /km'},{l:'HR during rep',v:'170–182 bpm'},{l:'Recovery',v:'90 sec easy jog'},{l:'Cool-down',v:'10 min easy + 5 min walk'}],note:'The extra 200m at the end of each rep is where fitness is built.'},
+{t:'long',tl:'Long',title:'Long run — 19 km',bl:[{l:'Distance',v:'19 km · Z2'},{l:'Pace',v:'6:50–7:10 /km'},{l:'HR',v:'142–152 bpm'}],note:null}
+]},
+{n:8,sub:'Deload',km:33,runs:[
+{t:'rest',tl:'Easy',title:'Easy run — 8 km',bl:[{l:'Distance',v:'8 km'},{l:'Pace',v:'6:55–7:20 /km'},{l:'HR',v:'142–152 bpm'}],note:'Deload. Resist the urge to push. Adaptation is happening.'},
+{t:'tempo',tl:'Tempo',title:'Deload tempo — ~8 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Tempo',v:'25 min at 6:10–6:20 /km'},{l:'HR target',v:'163–170 bpm'},{l:'Cool-down',v:'10 min easy + walk'}],note:'Swap intervals for tempo on deload weeks — less neural stress.'},
+{t:'long',tl:'Long',title:'Step-back long run — 14 km',bl:[{l:'Distance',v:'14 km · Z2'},{l:'Pace',v:'6:55–7:15 /km'},{l:'HR',v:'142–150 bpm'}],note:null}
+]}
+]},
+{id:'p3',name:'10K Peak',label:'③ 10K Peak',color:'#DBA842',weeks:'Wk 9–12',dur:'4 wks',km:'15–44 km/wk',
+desc:'Sharpen for July 13. Intervals reach 5:35/km — faster than race pace so 6:00/km feels controlled. Volume drops from week 11. Race week is minimal. Trust the taper.',
+data:[
+{n:9,sub:'Race simulation',km:44,open:1,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 9 km + 5 strides',bl:[{l:'Distance',v:'9 km'},{l:'Pace',v:'6:45–7:10 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'interval',tl:'Intervals',title:'3 × 2 km intervals — ~11 km total',bl:[{l:'Warm-up',v:'15 min easy jog'},{l:'Intervals',v:'3 × 2 km at 5:45–5:55 /km'},{l:'HR during rep',v:'170–182 bpm'},{l:'Recovery',v:'2 min easy jog between reps'},{l:'Cool-down',v:'10 min easy + 5 min walk'}],note:'Longer reps with slightly longer recovery. The 2 km distance teaches sustained speed — different to 800m reps.'},
+{t:'long',tl:'Long',title:'Long run — 18 km',bl:[{l:'Distance',v:'18 km · Z2'},{l:'Pace',v:'6:45–7:10 /km'},{l:'HR',v:'142–152 bpm'}],note:'Volume peaks here then drops. Keep it easy.'}
+]},
+{n:10,sub:'Sharpest week',km:41,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 8 km',bl:[{l:'Distance',v:'8 km'},{l:'Pace',v:'6:45–7:05 /km'},{l:'HR',v:'142–155 bpm'}],note:'Volume dropping. Don\'t compensate by pushing the easy run.'},
+{t:'interval',tl:'Intervals',title:'Peak intervals — ~10 km total',bl:[{l:'Warm-up',v:'15 min easy jog'},{l:'Intervals',v:'5 × 1 km at 5:35–5:45 /km',s:'fastest session of the entire 10K block'},{l:'HR during rep',v:'172–182 bpm'},{l:'Recovery',v:'90 sec easy jog'},{l:'Cool-down',v:'10 min easy + 5 min walk'}],note:'5:35/km is 25 sec/km faster than race pace — the goal is to make 6:00/km feel slow on race day.'},
+{t:'long',tl:'Long',title:'Long run — 16 km',bl:[{l:'Distance',v:'16 km · Z2'},{l:'Pace',v:'6:45–7:05 /km'},{l:'HR',v:'142–152 bpm'}],note:null}
+]},
+{n:11,sub:'Taper',km:29,runs:[
+{t:'rest',tl:'Easy',title:'Easy run — 7 km',bl:[{l:'Distance',v:'7 km'},{l:'Pace',v:'6:45–7:05 /km'},{l:'HR',v:'142–152 bpm'}],note:'Taper underway. Feeling flat or heavy is normal and means it\'s working.'},
+{t:'interval',tl:'Intervals',title:'Sharpener — ~7.5 km total',bl:[{l:'Warm-up',v:'15 min easy jog'},{l:'Intervals',v:'4 × 1 km at 5:45–5:55 /km',s:'one fewer rep than wk 10'},{l:'Recovery',v:'90 sec easy jog'},{l:'Cool-down',v:'10 min easy + 5 min walk'}],note:'These should feel crisp. If they feel easier than week 10, the taper is working.'},
+{t:'long',tl:'Long',title:'Easy long run — 11 km',bl:[{l:'Distance',v:'11 km · Z2'},{l:'Pace',v:'6:50–7:10 /km'},{l:'HR',v:'142–150 bpm'}],note:'Last long run before race. Short by recent standards — correct.'}
+]},
+{n:'Race',sub:'10K Race Week · Jul 7–13',km:15,runs:[
+{t:'rest',tl:'Easy',title:'Shakeout — 4 km (Tuesday)',bl:[{l:'Distance',v:'4 km'},{l:'Pace',v:'7:00–7:20 /km'},{l:'HR',v:'145–155 bpm'}],note:'Very easy. Just reminding legs what running feels like.'},
+{t:'rest',tl:'Prep',title:'Pre-race shakeout — 3 km + strides (Thursday)',bl:[{l:'Distance',v:'3 km easy'},{l:'Strides',v:'4 × 20 sec at ~5:55/km',s:'60 sec walk recovery'},{l:'Rest',v:'Friday completely off'}],note:'Nothing new this week — same shoes, same food, same sleep routine.'},
+{t:'race',tl:'Race',title:'10K Race — July 13',bl:[{l:'Warm-up',v:'10 min easy jog + 4 strides'},{l:'Km 1–3',v:'6:05–6:10 /km',s:'hold back — resist the crowd'},{l:'HR km 1–3',v:'cap at 170 bpm'},{l:'Km 4–8',v:'5:55–6:02 /km',s:'settle in'},{l:'HR km 4–8',v:'172–178 bpm'},{l:'Km 9–10',v:'everything left',s:'don\'t look at watch — run on feel'}],note:'Go out at 6:08/km even if it feels embarrassingly slow. If still feeling good at 7 km, push. The last 2 km is where you spend everything you saved.'}
+]}
+]},
+{id:'p4',name:'Recovery',label:'④ Post-10K',color:'#5A5248',weeks:'Wk 13',dur:'1 wk',km:'~28 km',
+desc:'Full recovery. No quality sessions. Three easy runs only. Your body needs 7–10 days to absorb the race effort even if legs feel fine after 2–3 days.',
+data:[
+{n:13,sub:'Post-race recovery',km:28,open:1,runs:[
+{t:'rest',tl:'Easy',title:'Easy run — 6 km',bl:[{l:'Distance',v:'6 km'},{l:'Pace',v:'7:15–7:45 /km',s:'slower than normal Z2 is fine'},{l:'HR',v:'140–150 bpm'}],note:'Race legs take longer to recover than they feel. No strides, no pushing.'},
+{t:'easy',tl:'Easy',title:'Easy run — 8 km + 4 relaxed strides',bl:[{l:'Distance',v:'8 km'},{l:'Pace',v:'7:05–7:30 /km'},{l:'Strides',v:'4 × 20 sec relaxed',s:'not fast — just flowing'}],note:'Strides here are activation only, not speed work.'},
+{t:'long',tl:'Long',title:'Easy long run — 14 km',bl:[{l:'Distance',v:'14 km · Z2'},{l:'Pace',v:'6:55–7:20 /km'},{l:'HR',v:'142–152 bpm'}],note:'Note your Z2 pace here — it should be meaningfully faster than April. That\'s the 10K block showing up.'}
+]}
+]},
+{id:'p5',name:'HM Rebuild',label:'⑤ HM Rebuild',color:'#D97C3A',weeks:'Wk 14–16',dur:'3 wks',km:'31–41 km/wk',
+desc:'Re-establish rhythm. Tempo returns faster than pre-10K. First HM pace reps — controlled, not maximal. Long run rebuilds to 16 km.',
+data:[
+{n:14,sub:'Tempo returns',km:38,open:1,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 9 km + 5 strides',bl:[{l:'Distance',v:'9 km'},{l:'Pace',v:'6:45–7:10 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'tempo',tl:'Tempo',title:'Tempo run — ~9 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Tempo',v:'25 min at 6:05–6:20 /km',s:'faster than pre-10K'},{l:'HR target',v:'163–172 bpm'},{l:'Cool-down',v:'10 min easy + walk'}],note:'Your tempo pace should feel easier than before the 10K at the same HR. The race fitness is carrying over.'},
+{t:'long',tl:'Long',title:'Long run — 15 km',bl:[{l:'Distance',v:'15 km · Z2'},{l:'Pace',v:'6:45–7:10 /km'},{l:'HR',v:'142–152 bpm'}],note:null}
+]},
+{n:15,sub:'First MP session',km:41,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 9 km + 5 strides',bl:[{l:'Distance',v:'9 km'},{l:'Pace',v:'6:45–7:05 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'mp',tl:'MP Work',title:'MP intervals — ~11 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Reps',v:'4 × 1 km at 5:41–5:52 /km',s:'HM goal pace'},{l:'HR during rep',v:'158–168 bpm',s:'controlled — sentences possible but laboured'},{l:'Recovery',v:'90 sec easy jog'},{l:'Cool-down',v:'10 min easy + walk'}],note:'First time at actual HM race pace. It should feel purposeful but controlled. If HR consistently above 172, back off to 5:52/km.'},
+{t:'long',tl:'Long',title:'Long run — 16 km',bl:[{l:'Distance',v:'16 km · Z2'},{l:'Pace',v:'6:45–7:05 /km'},{l:'HR',v:'142–152 bpm'}],note:null}
+]},
+{n:16,sub:'Deload',km:31,runs:[
+{t:'rest',tl:'Easy',title:'Easy run — 7 km',bl:[{l:'Distance',v:'7 km'},{l:'Pace',v:'6:50–7:10 /km'},{l:'HR',v:'142–150 bpm'}],note:'Deload. Keep it easy.'},
+{t:'tempo',tl:'Tempo',title:'Reduced tempo — ~8 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Tempo',v:'20 min at 6:05–6:20 /km'},{l:'HR target',v:'163–170 bpm'},{l:'Cool-down',v:'10 min easy + walk'}],note:null},
+{t:'long',tl:'Long',title:'Step-back long run — 14 km',bl:[{l:'Distance',v:'14 km · Z2'},{l:'Pace',v:'6:50–7:10 /km'},{l:'HR',v:'142–150 bpm'}],note:null}
+]}
+]},
+{id:'p6',name:'HM Specific',label:'⑥ HM Specific',color:'#5DBFA0',weeks:'Wk 17–20',dur:'4 wks',km:'46–52 km/wk',
+desc:'Make HM pace feel sustainable. Progression long runs begin — finishing at race pace on tired legs. Longer MP reps. Peak long run 21–22 km. The hardest block.',
+data:[
+{n:17,sub:'Extend MP work',km:46,open:1,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 10 km + 5 strides',bl:[{l:'Distance',v:'10 km'},{l:'Pace',v:'6:40–7:00 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'mp',tl:'MP Work',title:'3 × 2 km at HM pace — ~12 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Reps',v:'3 × 2 km at 5:41–5:50 /km'},{l:'HR during rep',v:'158–168 bpm'},{l:'Recovery',v:'90 sec easy jog'},{l:'Cool-down',v:'10 min easy + walk'}],note:'Each 2 km should feel the same controlled effort as the 1 km reps. If harder, ease to 5:52/km.'},
+{t:'long',tl:'Long',title:'Long run — 18 km',bl:[{l:'Distance',v:'18 km · Z2'},{l:'Pace',v:'6:40–7:00 /km'},{l:'HR',v:'142–152 bpm'}],note:null}
+]},
+{n:18,sub:'First progression long run',km:47,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 10 km + 5 strides',bl:[{l:'Distance',v:'10 km'},{l:'Pace',v:'6:40–7:00 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'mp',tl:'MP Work',title:'2 × 3 km at HM pace — ~12 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Reps',v:'2 × 3 km at 5:41–5:50 /km'},{l:'HR during rep',v:'158–168 bpm'},{l:'Recovery',v:'2 min easy jog'},{l:'Cool-down',v:'10 min easy + walk'}],note:null},
+{t:'prog',tl:'Prog Long',title:'Progression long run — 19 km',bl:[{l:'Km 1–15',v:'Z2 · 6:45–7:00 /km · 142–152 bpm'},{l:'Km 16–19',v:'~6:00–6:05 /km · controlled pickup'}],note:'First progression long run. Final 4 km should feel controlled, not a sprint. Teaches legs to run fast on fatigue — key for HM km 15–21.'}
+]},
+{n:19,sub:'Longer MP reps',km:50,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 10 km + 5 strides',bl:[{l:'Distance',v:'10 km'},{l:'Pace',v:'6:35–6:55 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'mp',tl:'MP Work',title:'4 × 2 km at HM pace — ~13 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Reps',v:'4 × 2 km at 5:41–5:48 /km',s:'pace tightening'},{l:'HR during rep',v:'158–170 bpm'},{l:'Recovery',v:'90 sec easy jog'},{l:'Cool-down',v:'10 min easy + walk'}],note:'8 km total at HM pace in reps. If all 4 feel controlled, you\'re in strong shape.'},
+{t:'prog',tl:'Prog Long',title:'Progression long run — 20 km',bl:[{l:'Km 1–15',v:'Z2 · 6:40–6:58 /km'},{l:'Km 16–20',v:'5:55–6:00 /km · controlled push'}],note:'5 km at real push after 15 km easy. Fuel beforehand. Take the day after very easy.'}
+]},
+{n:20,sub:'Peak week',km:52,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 10 km + 5 strides',bl:[{l:'Distance',v:'10 km'},{l:'Pace',v:'6:35–6:55 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'mp',tl:'MP Cont.',title:'5 km continuous at race pace — ~10 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'MP block',v:'5 km continuous at 5:41–5:48 /km'},{l:'HR target',v:'158–168 bpm',s:'sustained, not spiking'},{l:'Cool-down',v:'10 min easy + walk'}],note:'Continuous not reps. Holding race pace unbroken for 5 km is a different challenge. If this feels controlled, sub-2h is very achievable.'},
+{t:'prog',tl:'Peak Long',title:'Peak long run — 21–22 km',bl:[{l:'Km 1–16',v:'Z2 · 6:40–6:58 /km · HR 142–152'},{l:'Km 17–21',v:'ease into 5:50–5:58 /km if feeling good',s:'stay Z2 if legs are tired — no heroics'},{l:'Fuel',v:'every 40 min from km 0'}],note:'Longest run of the entire plan. Wear race kit, carry race nutrition, start at race time of day. This is your dress rehearsal.'}
+]}
+]},
+{id:'p7',name:'HM Peak',label:'⑦ HM Peak',color:'#D85858',weeks:'Wk 21–22',dur:'2 wks',km:'34–46 km/wk',
+desc:'Simulate race demands. Continuous MP blocks get longer. 6–7 km continuous at race pace in week 22. The sessions that tell you exactly what race day will feel like.',
+data:[
+{n:21,sub:'Deload after peak',km:34,open:1,runs:[
+{t:'rest',tl:'Easy',title:'Easy run — 8 km',bl:[{l:'Distance',v:'8 km'},{l:'Pace',v:'6:40–7:00 /km'},{l:'HR',v:'142–152 bpm'}],note:'After three hard weeks and a 21+ km long run, this deload is essential. Don\'t skip it.'},
+{t:'tempo',tl:'Tempo',title:'Reduced tempo — ~8 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Tempo',v:'20 min at 6:00–6:10 /km',s:'fastest tempo of plan'},{l:'HR target',v:'163–170 bpm'},{l:'Cool-down',v:'10 min easy + walk'}],note:'Fastest tempo paces of the plan. Should feel strong, not desperate.'},
+{t:'long',tl:'Long',title:'Step-back long run — 16 km',bl:[{l:'Distance',v:'16 km · Z2'},{l:'Pace',v:'6:40–6:58 /km'},{l:'HR',v:'142–152 bpm'}],note:null}
+]},
+{n:22,sub:'Continuous race pace',km:46,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 9 km + 5 strides',bl:[{l:'Distance',v:'9 km'},{l:'Pace',v:'6:35–6:55 /km'},{l:'HR',v:'142–155 bpm'}],note:null},
+{t:'mp',tl:'MP Cont.',title:'6–7 km continuous at race pace — ~12 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'MP block',v:'6–7 km continuous at 5:41–5:48 /km'},{l:'HR target',v:'158–168 bpm'},{l:'Cool-down',v:'10 min easy + walk'}],note:'Longest continuous MP block of the plan. Complete 7 km at 5:41/km feeling controlled → sub-2h is yours. Feels hard at 5:48/km → target 2:02–2:04 and race with full confidence.'},
+{t:'prog',tl:'Prog Long',title:'Progression long run — 20 km',bl:[{l:'Km 1–13',v:'Z2 · 6:40–6:55 /km'},{l:'Km 14–20',v:'middle 6 km at race pace 5:41–5:50 /km'}],note:'6 km at race pace after 13 km of easy running. Closest to race conditions in training.'}
+]}
+]},
+{id:'p8',name:'HM Taper',label:'⑧ HM Taper',color:'#9B7EF0',weeks:'Wk 23–25',dur:'3 wks',km:'22–36 km/wk',
+desc:'Volume drops sharply; intensity stays sharp. You may feel flat or restless — this is the taper effect and it means it\'s working. Do not add extra running.',
+data:[
+{n:23,sub:'Taper begins',km:36,open:1,runs:[
+{t:'easy',tl:'Easy',title:'Easy run — 8 km',bl:[{l:'Distance',v:'8 km'},{l:'Pace',v:'6:40–6:58 /km'},{l:'HR',v:'142–155 bpm'}],note:'Volume drops sharply. Resist the urge to do more.'},
+{t:'mp',tl:'MP Work',title:'Short MP sharpener — ~9 km total',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'Reps',v:'3 × 2 km at 5:41–5:48 /km'},{l:'HR',v:'158–168 bpm'},{l:'Recovery',v:'90 sec easy jog'},{l:'Cool-down',v:'10 min easy + walk'}],note:'These should feel noticeably easier than week 22. That\'s the taper.'},
+{t:'long',tl:'Long',title:'Final long run — 16 km',bl:[{l:'Km 1–13',v:'Z2 · 6:40–6:55 /km'},{l:'Km 14–16',v:'3 km at goal MP 5:41–5:48 /km',s:'final confidence check'}],note:'Last real long run. Those final 3 km at race pace on tired legs are your last proof point before race day.'}
+]},
+{n:24,sub:'Final taper',km:22,runs:[
+{t:'rest',tl:'Easy',title:'Easy run — 6 km (Mon/Tue)',bl:[{l:'Distance',v:'6 km'},{l:'Pace',v:'6:45–7:05 /km'},{l:'HR',v:'142–150 bpm'}],note:'Last week before race. Trust the work.'},
+{t:'mp',tl:'Race feel',title:'Race-feel run — ~8 km total (Wed/Thu)',bl:[{l:'Warm-up',v:'10 min easy jog'},{l:'MP block',v:'4 km at 5:41–5:48 /km'},{l:'Cool-down',v:'10 min easy + walk'}],note:'Intensity stays, volume slashes. Reminding legs what race pace feels like.'},
+{t:'rest',tl:'Shakeout',title:'Pre-race shakeout — 3 km + strides (Fri/Sat)',bl:[{l:'Distance',v:'3 km easy'},{l:'Strides',v:'4 × 20 sec at 5:00–5:15 /km',s:'sharp · full walk recovery'},{l:'Rest',v:'complete rest the day before race'}],note:'Carb load Thursday and Friday. Nothing new race week.'}
+]},
+{n:'Race',sub:'Half Marathon · Oct 5–11',km:25,runs:[
+{t:'rest',tl:'Easy',title:'Shakeout — 4 km (Monday)',bl:[{l:'Distance',v:'4 km'},{l:'Pace',v:'7:00–7:20 /km'},{l:'HR',v:'140–150 bpm'}],note:'Very easy. Nothing more.'},
+{t:'rest',tl:'Prep',title:'Pre-race activation — 3 km + strides (Thursday)',bl:[{l:'Distance',v:'3 km easy'},{l:'Strides',v:'4 × 20 sec at 5:41/km',s:'full walk recovery'},{l:'Rest',v:'Friday off · carb load Thu & Fri'}],note:'Same shoes, same food, same sleep. Nothing new.'},
+{t:'race',tl:'Race',title:'Half Marathon — October 11',bl:[{l:'Warm-up',v:'10 min easy jog + 4 strides'},{l:'Km 1–5',v:'5:48–5:55 /km',s:'hold back — feels almost too easy'},{l:'HR km 1–5',v:'155–163 bpm',s:'resist adrenaline and crowd'},{l:'Km 6–15',v:'5:41–5:48 /km',s:'settle into race pace'},{l:'HR km 6–15',v:'162–170 bpm',s:'strong and controlled'},{l:'Km 16–21',v:'run on feel — push everything',s:''},{l:'HR km 16–21',v:'170–182 bpm',s:'leave nothing on the course'}],note:'The biggest HM mistake is going out too fast. Adrenaline makes 5:48/km feel like jogging — it isn\'t. Run km 1–5 as if embarrassed by how slow you\'re going. Still feeling strong at km 16? That\'s when you race. You have done the work.'}
+]}
+]}
+];
+
+// ═══════════════════ STORAGE ═══════════════════
+const STORE_KEY='runplan_ticks_v2';
+let ticks={};
+function loadTicks(){try{ticks=JSON.parse(localStorage.getItem(STORE_KEY)||'{}')}catch(e){ticks={}}}
+function saveTicks(){try{localStorage.setItem(STORE_KEY,JSON.stringify(ticks))}catch(e){}}
+function tickId(phaseId,wkN,runIdx){return `${phaseId}_${wkN}_${runIdx}`}
+function isTicked(id){return !!ticks[id]}
+function toggleTick(id){ticks[id]=!ticks[id];if(!ticks[id])delete ticks[id];saveTicks()}
+
+// ═══════════════════ NAV ═══════════════════
+function nav(id,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('active');
+  btn.classList.add('on');
+}
+
+function goPhase(id){
+  nav('plan',document.querySelectorAll('.nb')[1]);
+  activatePhase(id);
+  setTimeout(()=>{
+    const p=document.querySelector(`.pill[data-pid="${id}"]`);
+    if(p)p.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  },60);
+}
+
+// ═══════════════════ HOME ═══════════════════
+function buildHome(){
+  const start=new Date('2026-04-21'), today=new Date();
+  const wk=Math.min(25,Math.max(1,Math.ceil((today-start)/(7*86400000))));
+  const pct=Math.round((wk/25)*100);
+  document.getElementById('home-prog-fill').style.width=pct+'%';
+  document.getElementById('home-prog-label').textContent='Week '+wk+' of 25';
+  document.getElementById('home-prog-pct').textContent=pct+'%';
+  updateRunsDone();
+
+  document.getElementById('home-phase-list').innerHTML=PHASES.map(ph=>{
+    const total=ph.data.reduce((a,w)=>a+w.runs.length,0);
+    const done=ph.data.reduce((a,w)=>a+w.runs.filter((_,ri)=>isTicked(tickId(ph.id,w.n,ri))).length,0);
+    return `<div class="phase-row" onclick="goPhase('${ph.id}')">
+      <div class="ph-dot" style="background:${ph.color}"></div>
+      <div class="ph-info">
+        <div class="ph-name">${ph.label}</div>
+        <div class="ph-meta">${ph.weeks} · ${ph.dur} · ${ph.km||''}</div>
+      </div>
+      <div class="ph-prog">${done}/${total}</div>
+      <div class="ph-arr">›</div>
+    </div>`;
+  }).join('');
+}
+
+function updateRunsDone(){
+  const total=PHASES.reduce((a,ph)=>a+ph.data.reduce((b,w)=>b+w.runs.length,0),0);
+  const done=Object.keys(ticks).filter(k=>ticks[k]).length;
+  document.getElementById('home-runs-done').textContent=`${done} of ${total} runs ticked off`;
+}
+
+// ═══════════════════ PLAN ═══════════════════
+let currentPhase='p1';
+
+function buildPlan(){
+  document.getElementById('phase-pills').innerHTML=PHASES.map(ph=>
+    `<button class="pill" data-pid="${ph.id}" onclick="activatePhase('${ph.id}')">${ph.name}</button>`
+  ).join('');
+  activatePhase('p1');
+}
+
+function activatePhase(id){
+  currentPhase=id;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.pid===id));
+  const ph=PHASES.find(p=>p.id===id);
+  const statsHtml=ph.km?`<div class="ph-banner-stats">
+    <div><div class="ph-stat-v">${ph.km}</div><div class="ph-stat-l">volume</div></div>
+    <div><div class="ph-stat-v">${ph.dur}</div><div class="ph-stat-l">duration</div></div>
+  </div>`:'';
+  document.getElementById('plan-body').innerHTML=`
+    <div class="ph-banner">
+      <div class="ph-accent" style="background:${ph.color}"></div>
+      <div class="ph-banner-content">
+        <div class="ph-banner-title">${ph.label}</div>
+        <div class="ph-banner-desc">${ph.desc}</div>
+        ${statsHtml}
+      </div>
+    </div>
+    ${ph.data.map((w,wi)=>buildWeek(ph.id,w,wi===0||!!w.open)).join('')}
+    <div style="height:8px"></div>`;
+}
+
+function buildWeek(phId,w,open){
+  const total=w.runs.length;
+  const done=w.runs.filter((_,ri)=>isTicked(tickId(phId,w.n,ri))).length;
+  const progStr=done>0?`${done}/${total}`:'';
+  return `<div class="wk-card${open?' open':''}" id="wc-${phId}-${w.n}">
+    <div class="wk-head" onclick="this.parentElement.classList.toggle('open');updateWkProg('${phId}','${w.n}')">
+      <span class="wk-num">Week ${w.n}</span>
+      <span class="wk-title">${w.sub}</span>
+      <div class="wk-right">
+        <span class="wk-km">~${w.km}km</span>
+        <span class="wk-prog" id="wp-${phId}-${w.n}">${progStr}</span>
+        <span class="wk-chev">▼</span>
+      </div>
+    </div>
+    <div class="wk-body">${w.runs.map((r,ri)=>buildRun(phId,w.n,r,ri)).join('')}</div>
+  </div>`;
+}
+
+function buildRun(phId,wn,r,ri){
+  const id=tickId(phId,wn,ri);
+  const done=isTicked(id);
+  const cls={easy:'rt-easy',long:'rt-long',tempo:'rt-tempo',mp:'rt-mp',interval:'rt-interval',prog:'rt-prog',race:'rt-race',rest:'rt-rest'}[r.t]||'rt-easy';
+  const blocks=r.bl.map(b=>`<div class="detail-line">
+    <span class="dl">${b.l}</span><span class="dv">${b.v}</span>${b.s?`<span class="ds">— ${b.s}</span>`:''}
+  </div>`).join('');
+  return `<div class="run-row ${cls}${done?' done':''}" id="rr-${id}">
+    <div class="run-type-col"><span class="run-type-label">${r.tl}</span></div>
+    <div class="run-detail-col">
+      <div class="run-title">${r.title}</div>
+      ${blocks}
+      ${r.note?`<div class="run-note">${r.note}</div>`:''}
+      <button class="tick-btn${done?' ticked':''}" onclick="handleTick('${id}','${phId}','${wn}',this)" id="tb-${id}">
+        <span class="tick-icon">${done?'✓':'○'}</span>
+        <span>${done?'Done — tap to undo':'Mark as done'}</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+function handleTick(id,phId,wn,btn){
+  toggleTick(id);
+  const done=isTicked(id);
+  // update row
+  const row=document.getElementById('rr-'+id);
+  if(row)row.classList.toggle('done',done);
+  // update button
+  btn.classList.toggle('ticked',done);
+  btn.innerHTML=`<span class="tick-icon">${done?'✓':'○'}</span><span>${done?'Done — tap to undo':'Mark as done'}</span>`;
+  // update week progress
+  updateWkProg(phId,wn);
+  // update home
+  updateRunsDone();
+  // refresh home phase list counts (silently)
+  if(document.getElementById('home-phase-list').children.length){buildHome()}
+  // toast
+  showToast(done?'Run ticked off ✓':'Tick removed');
+}
+
+function updateWkProg(phId,wn){
+  const ph=PHASES.find(p=>p.id===phId);
+  if(!ph)return;
+  const w=ph.data.find(x=>String(x.n)===String(wn));
+  if(!w)return;
+  const total=w.runs.length;
+  const done=w.runs.filter((_,ri)=>isTicked(tickId(phId,w.n,ri))).length;
+  const el=document.getElementById(`wp-${phId}-${wn}`);
+  if(el)el.textContent=done>0?`${done}/${total}`:'';
+}
+
+// ═══════════════════ TOAST ═══════════════════
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+// ═══════════════════ RESET ═══════════════════
+function confirmReset(){
+  if(confirm('Reset all ticked runs? This cannot be undone.')){
+    ticks={};
+    saveTicks();
+    buildHome();
+    if(currentPhase)activatePhase(currentPhase);
+    showToast('All ticks reset');
+  }
+}
+
+// ═══════════════════ SERVICE WORKER ═══════════════════
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
+
+// ═══════════════════ INIT ═══════════════════
+loadTicks();
+buildHome();
+buildPlan();
+</script>
+</body>
+</html>

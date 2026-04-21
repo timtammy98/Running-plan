@@ -1,0 +1,13 @@
+{
+  "name": "Run Plan — Sub 60 & Sub 2h",
+  "short_name": "Run Plan",
+  "description": "25-week running plan Apr–Oct 2026",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0A0907",
+  "theme_color": "#0A0907",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
