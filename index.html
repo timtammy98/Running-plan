@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0A0907">
+<meta name="theme-color" content="#F5F2EC">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Run Plan">
@@ -14,19 +14,19 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 :root{
-  --bg:#0A0907; --bg2:#131109; --bg3:#1B1810; --bg4:#232017;
-  --ink:#EAE4D8; --ink2:#857D6E; --ink3:#4A4438;
-  --gold:#C8B86E; --gold-d:#8A7B48; --gold-bg:rgba(200,184,110,0.08);
-  --brd:rgba(234,228,216,0.07); --brd2:rgba(234,228,216,0.13); --brd3:rgba(234,228,216,0.22);
-  --c-easy:#5BA8D4; --c-easy-a:rgba(91,168,212,0.12);
-  --c-long:#4EB87A; --c-long-a:rgba(78,184,122,0.12);
-  --c-tempo:#DBA842; --c-tempo-a:rgba(219,168,66,0.12);
-  --c-mp:#D97C3A; --c-mp-a:rgba(217,124,58,0.12);
-  --c-int:#D85858; --c-int-a:rgba(216,88,88,0.12);
-  --c-prog:#5DBFA0; --c-prog-a:rgba(93,191,160,0.12);
-  --c-race:#9B7EF0; --c-race-a:rgba(155,126,240,0.12);
-  --c-rest:#5A5248; --c-rest-a:rgba(90,82,72,0.12);
-  --green-tick:#4EB87A;
+  --bg:#F5F2EC; --bg2:#FFFFFF; --bg3:#EEE9E0; --bg4:#E5DFD4;
+  --ink:#1C1814; --ink2:#7A7060; --ink3:#B0A898;
+  --gold:#8A6F2E; --gold-d:#6B5522; --gold-bg:rgba(138,111,46,0.07);
+  --brd:rgba(28,24,20,0.08); --brd2:rgba(28,24,20,0.13); --brd3:rgba(28,24,20,0.22);
+  --c-easy:#1F7AAD; --c-easy-a:rgba(31,122,173,0.09);
+  --c-long:#1A8C52; --c-long-a:rgba(26,140,82,0.09);
+  --c-tempo:#9B6800; --c-tempo-a:rgba(155,104,0,0.09);
+  --c-mp:#B85A10; --c-mp-a:rgba(184,90,16,0.09);
+  --c-int:#B83030; --c-int-a:rgba(184,48,48,0.09);
+  --c-prog:#1A8A72; --c-prog-a:rgba(26,138,114,0.09);
+  --c-race:#6040C8; --c-race-a:rgba(96,64,200,0.09);
+  --c-rest:#706858; --c-rest-a:rgba(112,104,88,0.09);
+  --green-tick:#1A8C52;
   --nav-h:58px; --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
 }
@@ -67,7 +67,7 @@ button{font-family:'DM Mono',monospace;cursor:pointer}
 /* METRIC MINI */
 .metric{background:var(--bg3);border-radius:12px;padding:12px 14px}
 .metric-label{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink3);margin-bottom:5px}
-.metric-val{font-family:'Instrument Serif',serif;font-size:1.5rem;color:var(--gold);line-height:1}
+.metric-val{font-family:'Instrument Serif',serif;font-size:1.5rem;color:var(--gold);line-height:1;font-weight:400}
 .metric-sub{font-size:10px;color:var(--ink2);margin-top:3px}
 
 /* PROGRESS BAR */
@@ -97,7 +97,7 @@ button{font-family:'DM Mono',monospace;cursor:pointer}
 .pills{display:flex;gap:7px;overflow-x:auto;padding:10px 16px 13px;scrollbar-width:none}
 .pills::-webkit-scrollbar{display:none}
 .pill{flex-shrink:0;background:var(--bg3);border:0.5px solid var(--brd2);border-radius:100px;padding:6px 14px;font-size:10px;letter-spacing:0.05em;color:var(--ink2);border:none;white-space:nowrap;transition:all 0.15s}
-.pill.on{background:var(--gold);color:#0A0907;font-weight:500}
+.pill.on{background:var(--gold);color:#FFFFFF;font-weight:500}
 
 .plan-body{padding:12px 14px 0}
 
@@ -114,7 +114,7 @@ button{font-family:'DM Mono',monospace;cursor:pointer}
 /* Week cards */
 .wk-card{background:var(--bg2);border:0.5px solid var(--brd);border-radius:14px;overflow:hidden;margin-bottom:9px}
 .wk-head{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;user-select:none;-webkit-user-select:none}
-.wk-head:active{background:rgba(234,228,216,0.03)}
+.wk-head:active{background:rgba(28,24,20,0.03)}
 .wk-num{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink3);min-width:40px;flex-shrink:0}
 .wk-title{font-family:'Instrument Serif',serif;font-size:0.95rem;flex:1;color:var(--ink)}
 .wk-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -142,7 +142,7 @@ button{font-family:'DM Mono',monospace;cursor:pointer}
 /* TICK BUTTON */
 .tick-btn{margin-top:10px;display:flex;align-items:center;gap:8px;background:var(--bg3);border:0.5px solid var(--brd2);border-radius:100px;padding:7px 14px;font-size:11px;color:var(--ink2);width:100%;justify-content:center;transition:all 0.15s}
 .tick-btn:active{transform:scale(0.97)}
-.tick-btn.ticked{background:rgba(78,184,122,0.12);border-color:rgba(78,184,122,0.3);color:var(--green-tick)}
+.tick-btn.ticked{background:rgba(26,140,82,0.1);border-color:rgba(26,140,82,0.3);color:var(--green-tick)}
 .tick-icon{font-size:14px;line-height:1}
 
 /* Type colours */
@@ -167,9 +167,9 @@ button{font-family:'DM Mono',monospace;cursor:pointer}
 .rule-head-icon{font-size:18px;line-height:1;flex-shrink:0;width:24px;text-align:center}
 .rule-head-title{font-size:13px;font-weight:500;color:var(--ink);flex:1}
 .rule-head-badge{font-size:9px;font-weight:500;padding:3px 9px;border-radius:100px;letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0}
-.badge-never{background:rgba(216,88,88,0.15);color:#D85858}
-.badge-caution{background:rgba(219,168,66,0.15);color:#DBA842}
-.badge-fine{background:rgba(78,184,122,0.15);color:#4EB87A}
+.badge-never{background:rgba(184,48,48,0.1);color:#B83030}
+.badge-caution{background:rgba(155,104,0,0.1);color:#9B6800}
+.badge-fine{background:rgba(26,140,82,0.1);color:#1A8C52}
 .rule-body{padding:12px 16px;display:flex;flex-direction:column;gap:7px}
 .rule-line{display:flex;align-items:flex-start;gap:9px;font-size:11px;color:var(--ink2);line-height:1.6}
 .rule-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
@@ -192,7 +192,7 @@ button{font-family:'DM Mono',monospace;cursor:pointer}
 .seq-act.pilates-act{background:rgba(155,126,240,0.1);color:#9B7EF0;border-color:rgba(155,126,240,0.2)}
 .seq-act.boulder-act{background:rgba(219,168,66,0.1);color:#DBA842;border-color:rgba(219,168,66,0.2)}
 .seq-act.spin-act{background:rgba(93,191,160,0.1);color:#5DBFA0;border-color:rgba(93,191,160,0.2)}
-.seq-act.rest-act{background:var(--bg3);color:var(--ink3)}
+.seq-act.rest-act{background:var(--bg3);color:var(--ink3);border-color:var(--brd2)}
 
 /* ZONES SCREEN */
 .zones-hero{background:var(--bg2);padding:calc(var(--safe-t) + 44px) 20px 20px;border-bottom:0.5px solid var(--brd)}
@@ -202,7 +202,7 @@ button{font-family:'DM Mono',monospace;cursor:pointer}
 .zone-card{background:var(--bg2);border:0.5px solid var(--brd2);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px}
 .zone-num{font-family:'Instrument Serif',serif;font-style:italic;font-size:2.2rem;color:var(--ink3);line-height:1;min-width:28px}
 .zone-name{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px}
-.zone-hr{font-size:12px;color:var(--gold);margin-bottom:5px}
+.zone-hr{font-size:12px;color:var(--gold);margin-bottom:5px;font-weight:500}
 .zone-desc{font-size:11px;color:var(--ink2);line-height:1.65}
 .zone-use{font-size:9px;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink3);margin-top:5px}
 .ref-card{background:var(--bg2);border:0.5px solid var(--brd2);border-radius:14px;padding:13px 16px;margin-bottom:10px}
@@ -541,35 +541,35 @@ button{font-family:'DM Mono',monospace;cursor:pointer}
       </div>
       <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
         <span style="font-size:12px;color:var(--ink2)">Quality run + hard spin</span>
-        <span style="font-size:11px;font-weight:500;color:#D85858">Never</span>
+        <span style="font-size:11px;font-weight:500;color:#B83030">Never</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
         <span style="font-size:12px;color:var(--ink2)">Long run + hard session</span>
-        <span style="font-size:11px;font-weight:500;color:#D85858">Never</span>
+        <span style="font-size:11px;font-weight:500;color:#B83030">Never</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
         <span style="font-size:12px;color:var(--ink2)">Quality run + bouldering</span>
-        <span style="font-size:11px;font-weight:500;color:#DBA842">Run first</span>
+        <span style="font-size:11px;font-weight:500;color:#9B6800">Run first</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
         <span style="font-size:12px;color:var(--ink2)">Easy run + hard spin</span>
-        <span style="font-size:11px;font-weight:500;color:#DBA842">Run first</span>
+        <span style="font-size:11px;font-weight:500;color:#9B6800">Run first</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
         <span style="font-size:12px;color:var(--ink2)">Easy run + bouldering</span>
-        <span style="font-size:11px;font-weight:500;color:#DBA842">Run first</span>
+        <span style="font-size:11px;font-weight:500;color:#9B6800">Run first</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
         <span style="font-size:12px;color:var(--ink2)">Any run + pilates</span>
-        <span style="font-size:11px;font-weight:500;color:#4EB87A">Fine</span>
+        <span style="font-size:11px;font-weight:500;color:#1A8C52">Fine</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:0.5px solid var(--brd);align-items:center">
         <span style="font-size:12px;color:var(--ink2)">Easy run + light spin</span>
-        <span style="font-size:11px;font-weight:500;color:#4EB87A">Fine</span>
+        <span style="font-size:11px;font-weight:500;color:#1A8C52">Fine</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;align-items:center">
         <span style="font-size:12px;color:var(--ink2)">Pilates + bouldering</span>
-        <span style="font-size:11px;font-weight:500;color:#4EB87A">Fine</span>
+        <span style="font-size:11px;font-weight:500;color:#1A8C52">Fine</span>
       </div>
     </div>
 
